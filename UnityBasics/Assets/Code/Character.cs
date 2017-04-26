@@ -25,18 +25,13 @@ public class Character : MonoBehaviour
 		// kanssa samassa GameObjectissa.
 		_collider = GetComponent<Collider>();
 
-		// Haetaan
+		// Haetaan viittaus Rigidbody-komponenttiin
 		_rigidbody = GetComponent<Rigidbody>();
 
 		if(_rigidbody == null)
 		{
 			Debug.LogError("Rigidbody not found!");
 		}
-	}
-
-	public void Move()
-	{
-
 	}
 
 	void Update()

@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
 	private int _score;
 	private float _currentTime;
 	private bool _isRunning = false;
+	private UI _ui;
 
 	// Tavoitepistemäärä
 	public int MaxScore;
@@ -33,6 +34,7 @@ public class GameManager : MonoBehaviour
 	private void Awake()
 	{
 		Current = this;
+		_ui = FindObjectOfType<UI>();
 	}
 
 	private void Start()
@@ -56,6 +58,8 @@ public class GameManager : MonoBehaviour
 			_currentTime = 0;
 			GameOver ( false );
 		}
+
+		_ui.UpdateTimer(_currentTime);
 	}
 
 	#endregion
@@ -65,15 +69,8 @@ public class GameManager : MonoBehaviour
 	private void GameOver( bool didWin )
 	{
 		_isRunning = false;
-
-		if(didWin)
-		{
-			Debug.Log("Player won the game");
-		}
-		else
-		{
-			Debug.Log("Player lost the game");
-		}
+		_ui.GameOverView.Show(true, didWin);
+		Time.timeScale = 0;
 	}
 
 	// Tämän metodin kutsuminen käynnistää pelin
@@ -82,11 +79,20 @@ public class GameManager : MonoBehaviour
 		_score = 0;
 		_currentTime = TimeLimit;
 		_isRunning = true;
+
+		// Päivittää pelaajan pistemäärän UI:lle pelin alussa.
+		_ui.UpdateScore(_score);
+
+		// Päivittää jäljellä olevan ajan UI:lle.
+		_ui.UpdateTimer(_currentTime);
 	}
 
 	public void AddScore(int score)
 	{
 		_score += score;
+		// Päivittää pelaajan pistemäärän UI:lle joka kerta, kun pelaaja
+		// kerää kolikon.
+		_ui.UpdateScore(_score);
 
 		Debug.Log("Score: " + _score);
 
