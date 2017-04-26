@@ -7,6 +7,23 @@ public class Coin : MonoBehaviour
 	public float TurnSpeed;
 	public int Score = 100;
 
+	private CapsuleCollider _collider;
+
+	public float Radius
+	{
+		get { return _collider.radius; }
+	}
+
+	public float Height
+	{
+		get { return Radius * 2; }
+	}
+
+	private void Awake()
+	{
+		_collider = GetComponent<CapsuleCollider>();
+	}
+
 	private void Update()
 	{
 		Vector3 rotation = transform.eulerAngles;
@@ -17,12 +34,17 @@ public class Coin : MonoBehaviour
 	// Kutsutaan, kun kaksi Collideria törmää toisiinsa
 	private void OnTriggerEnter(Collider other)
 	{
-		Character character =
-			other.gameObject.GetComponent<Character>();
+		// Haetaan viittaus ICharacter-rajapinnan toteuttavaan
+		// komponenttiin. Koska rajapinnan toteuttajan on pakko
+		// toteuttaa metodi CollectCoin, voimme kutsua kyseistä metodia
+		// riippumatta ICharacter-rajapinnan toteuttavan olion
+		// todellisesta tyypistä.
+		ICharacter character =
+			other.gameObject.GetComponent<ICharacter>();
 
 		if ( character != null )
 		{
-			GameManager.Current.AddScore(Score);
+			character.CollectCoin(Score);
 			Destroy(gameObject);
 		}
 	}

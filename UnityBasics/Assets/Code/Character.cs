@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Character : MonoBehaviour
+public class Character : MonoBehaviour, ICharacter
 {
-	public float Speed = 1;
-	public float JumpForce;
-	public float TurnSpeed = 45;
-
 	private Rigidbody _rigidbody;
 	private Collider _collider;
+	private Mover _mover;
 
 	public float Height
 	{
@@ -32,58 +29,37 @@ public class Character : MonoBehaviour
 		{
 			Debug.LogError("Rigidbody not found!");
 		}
-	}
 
-	void Update()
-	{
-		// MoveCharacterByModifyingPosition();
-	}
+		// Haetaan viittaus Mover-tyyppiseen komponenttiin, joka
+		// huolehtii hahmon liikuttamisesta.
+		_mover = GetComponent<Mover>();
 
-	private void MoveCharacterByModifyingPosition()
-	{
-		Vector3 playerPosition = GetNewPosition(Time.deltaTime);
-		transform.position = playerPosition;
-	}
-
-	private Vector3 GetNewPosition(float deltaTime)
-	{
-		float horizontal = Input.GetAxis("Horizontal");
-		float vertical = Input.GetAxis("Vertical");
-
-		// transform.position kuvaa olion sijainnin maailman koordinaatistossa.
-		// transform.localPosition kuvaa sijainnin suhteessa olion vanhempaan.
-		Vector3 playerPosition = transform.position;
-
-		playerPosition += transform.forward * vertical * deltaTime * Speed;
-		playerPosition += transform.right * horizontal * deltaTime * Speed;
-
-		return playerPosition;
+		// This viittaa aina tähän olioon (tässä tapauksessa 
+		// Character -tyyppiseen olioon).
+		_mover.Init(this);
 	}
 
 	void FixedUpdate()
 	{
-		Vector3 newPosition = GetNewPosition(Time.fixedDeltaTime);
-		_rigidbody.MovePosition(newPosition);
-
-		if( Input.GetKeyDown( KeyCode.Space ) && IsGrounded() )
-		{
-			_rigidbody.AddForce(Vector3.up * JumpForce, ForceMode.Impulse);
-		}
-
+		float horizontal = Input.GetAxis("Horizontal");
+		float vertical = Input.GetAxis("Vertical");
 		float turn = Input.GetAxis("Turn");
-		Vector3 rotation = transform.eulerAngles;
-		rotation.y += turn * Time.fixedDeltaTime * TurnSpeed;
-		Quaternion quaternionRotation = Quaternion.Euler(rotation);
-		_rigidbody.MoveRotation(quaternionRotation);
-	}
+		bool jump = Input.GetKeyDown(KeyCode.Space);
 
-	public bool IsGrounded()
+		// Kutsu _mover.Move -metodia liikuttaaksesi hahmoa.
+		_mover.Move(horizontal, vertical, Time.fixedDeltaTime);
+		_mover.Turn(turn, Time.fixedDeltaTime);
+
+		if ( jump )
+		{
+			_mover.Jump();
+		}
+	}	
+
+	// Tätä metodia kutsutaan, kun pelaaja kerää kolikon. Metodi
+	// välittää tiedon kolikon keräämisestä GameManager:lle.
+	public void CollectCoin(int points)
 	{
-		// Ammutaan säde GameObjectin keskikohdasta alaspäin Ground-layerilla
-		// olevia kappaleita vastaan. Jos säde osuu johonkin kappaleeseen,
-		// tiedämme GameObjectin olevan maassa.
-		bool isGrounded = Physics.Raycast(transform.position, Vector3.down,
-			Height / 2 + 0.1f, LayerMask.GetMask("Ground"));
-		return isGrounded;
+		GameManager.Current.AddScore(points);
 	}
 }
